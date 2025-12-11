@@ -26,6 +26,7 @@ const payCardBtn = document.getElementById('pay-card');
 const payIdealBtn = document.getElementById('pay-ideal');
 const googlePayScriptId = 'google-pay-script';
 const framesScriptId = 'framesv2-script';
+let framesInitialized = false;
 
 function formatAmount(amount, currency) {
   try {
@@ -90,7 +91,8 @@ async function fetchConfig() {
   return data;
 }
 
-function initFrames(publicKey) {
+function initFrames(publicKey, attempt = 0) {
+  if (framesInitialized) return;
   if (!window.Frames) {
     console.error('Frames library not loaded');
     setStatus('Payment fields failed to load. Check network/ad blockers for cdn.checkout.com.', true);
@@ -105,19 +107,30 @@ function initFrames(publicKey) {
     return;
   }
 
-  Frames.init({
-    publicKey,
-    schemeChoice: true,
-    cardholder: {
-      name: 'Checkout Demo',
-    },
-    style: {
-      base: { color: '#323416', fontFamily: '"Helvetica Neue", Arial, sans-serif' },
-      focus: { color: '#8C9E6E' },
-      valid: { color: '#323416' },
-      invalid: { color: '#8b1a1a' },
-    },
-  });
+  try {
+    Frames.init({
+      publicKey,
+      schemeChoice: true,
+      cardholder: {
+        name: 'Checkout Demo',
+      },
+      style: {
+        base: { color: '#323416', fontFamily: '"Helvetica Neue", Arial, sans-serif' },
+        focus: { color: '#8C9E6E' },
+        valid: { color: '#323416' },
+        invalid: { color: '#8b1a1a' },
+      },
+    });
+    framesInitialized = true;
+  } catch (err) {
+    console.error('Frames init failed', err);
+    if (attempt < 2) {
+      setTimeout(() => initFrames(publicKey, attempt + 1), 200);
+    } else {
+      setStatus('Payment fields failed to render. Check blockers and refresh.', true);
+    }
+    return;
+  }
 
   Frames.addEventHandler(Frames.Events.CARD_VALIDATION_CHANGED, (event) => {
     if (event.isValid || !event.elementType) return;

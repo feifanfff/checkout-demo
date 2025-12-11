@@ -91,20 +91,19 @@ async function fetchConfig() {
   return data;
 }
 
-function initFrames(publicKey) {
-  if (framesInitialized) return;
+function tryInitFrames(publicKey) {
+  if (framesInitialized) return true;
   if (!window.Frames) {
     console.error('Frames library not loaded');
     setStatus('Payment fields failed to load. Check network/ad blockers for cdn.checkout.com.', true);
-    return;
+    return false;
   }
   const cardNumber = document.getElementById('card-number');
   const expiry = document.getElementById('expiry-date');
   const cvv = document.getElementById('cvv');
   if (!cardNumber || !expiry || !cvv) {
     console.error('Card frame containers missing in DOM.');
-    setStatus('Card form failed to load. Refresh and try again.', true);
-    return;
+    return false;
   }
 
   try {
@@ -124,8 +123,7 @@ function initFrames(publicKey) {
     framesInitialized = true;
   } catch (err) {
     console.error('Frames init failed', err);
-    setStatus('Payment fields failed to render. Check blockers and refresh.', true);
-    return;
+    return false;
   }
 
   Frames.addEventHandler(Frames.Events.CARD_VALIDATION_CHANGED, (event) => {
@@ -148,6 +146,7 @@ function initFrames(publicKey) {
       cardholder: cardholderName,
     });
   });
+  return true;
 }
 
 async function submitPayment(url, payload) {
@@ -354,7 +353,16 @@ async function bootstrap() {
     try {
       await loadFramesScript();
       await waitForCardContainers();
-      initFrames(cfg.publicKey);
+      let attempts = 0;
+      while (attempts < 5 && !framesInitialized) {
+        const ok = tryInitFrames(cfg.publicKey);
+        if (ok) break;
+        attempts += 1;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      if (!framesInitialized) {
+        setStatus('Payment fields failed to render. Check blockers and refresh.', true);
+      }
     } catch (err) {
       console.error(err);
       setStatus(err.message || 'Failed to load payment fields.', true);

@@ -93,6 +93,9 @@ async function handleIdealPayment(body) {
   if (!body.amount || !body.currency) {
     throw new Error('amount and currency are required');
   }
+  if (body.currency !== 'EUR') {
+    throw new Error('iDEAL requires EUR currency');
+  }
   const payload = {
     source: { type: 'ideal' },
     amount: body.amount,
@@ -100,6 +103,7 @@ async function handleIdealPayment(body) {
     processing_channel_id: CHECKOUT_PROCESSING_CHANNEL,
     reference: body.reference || 'demo-order-ideal',
     description: body.description || 'iDEAL payment for iPhone case',
+    payment_type: 'Regular',
     success_url: SUCCESS_URL,
     failure_url: FAILURE_URL,
   };
@@ -171,7 +175,13 @@ const server = http.createServer(async (req, res) => {
       const result = await handleIdealPayment(body);
       return sendJSON(res, 200, result);
     } catch (err) {
-      return sendJSON(res, 400, { error: err.message, details: err.details });
+      return sendJSON(res, 400, {
+        error: err.message,
+        details: err.details,
+        requestId: err.requestId,
+        errorType: err.errorType,
+        body: err.body,
+      });
     }
   }
 

@@ -341,11 +341,12 @@ function waitForCardContainers(attempt = 0) {
   const ids = ['card-number', 'expiry-date', 'cvv'];
   const missing = ids.filter((id) => !document.getElementById(id));
   if (missing.length === 0) return Promise.resolve();
-  if (attempt >= 10) return Promise.reject(new Error('Card fields not in DOM after waiting.'));
+  if (attempt >= 20) return Promise.reject(new Error('Card fields not in DOM after waiting.'));
   return new Promise((resolve) => setTimeout(resolve, 100)).then(() => waitForCardContainers(attempt + 1));
 }
 
 async function bootstrap() {
+  showMethod('card');
   updateCountry(state.country);
   initEventHandlers();
   const cfg = await fetchConfig();

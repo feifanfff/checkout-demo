@@ -45,10 +45,19 @@ function parseJSONBody(req) {
   });
 }
 
+function logPayload(type, payload) {
+  const clone = { ...payload };
+  if (clone.source && clone.source.token) {
+    clone.source = { ...clone.source, token: '[masked]' };
+  }
+  console.log(`[checkout] ${type} payload`, JSON.stringify(clone));
+}
+
 async function createCheckoutPayment(payload) {
   if (!CHECKOUT_SECRET_KEY) {
     throw new Error('Missing CHECKOUT_SECRET_KEY');
   }
+
   const res = await fetch('https://api.sandbox.checkout.com/payments', {
     method: 'POST',
     headers: {
@@ -86,6 +95,7 @@ async function handleCardPayment(body) {
     reference: body.reference || 'demo-order-card',
     capture: true,
   };
+  logPayload('card', payload);
   return createCheckoutPayment(payload);
 }
 
@@ -107,6 +117,7 @@ async function handleIdealPayment(body) {
     success_url: SUCCESS_URL,
     failure_url: FAILURE_URL,
   };
+  logPayload('ideal', payload);
   return createCheckoutPayment(payload);
 }
 
@@ -122,6 +133,7 @@ async function handleWalletPayment(body) {
     reference: body.reference || 'demo-order-wallet',
     capture: true,
   };
+  logPayload('wallet', payload);
   return createCheckoutPayment(payload);
 }
 

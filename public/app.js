@@ -90,6 +90,11 @@ async function fetchConfig() {
 }
 
 function initFrames(publicKey) {
+  if (!window.Frames) {
+    console.error('Frames library not loaded');
+    setStatus('Payment fields failed to load. Check network/ad blockers for cdn.checkout.com.', true);
+    return;
+  }
   const cardNumber = document.getElementById('card-number');
   const expiry = document.getElementById('expiry-date');
   const cvv = document.getElementById('cvv');

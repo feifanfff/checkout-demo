@@ -1,1 +1,26 @@
-# checkout-demo
+# Checkout Demo (Part 2)
+
+Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherlands. Includes secure card capture (Frames), iDEAL for EUR, and a wallet button (Google Pay test) for one-touch checkout. No database required.
+
+## Setup
+
+1. Copy `.env.example` to `.env` and fill sandbox keys:
+   - `CHECKOUT_PUBLIC_KEY`
+   - `CHECKOUT_SECRET_KEY`
+   - `CHECKOUT_PROCESSING_CHANNEL`
+   - Optional: `SUCCESS_URL`, `FAILURE_URL`, `PORT`, `HOST`
+2. Install Node.js 18+.
+3. Run the server:
+   ```bash
+   npm start
+   ```
+4. Open `http://localhost:3000`.
+
+## Flows
+- Card: Frames tokenizes card data, backend creates payment via Checkout.com.
+- iDEAL: Enabled for EUR (Netherlands). Backend returns redirect; success/failure returns to the app.
+- Wallet: Google Pay test environment. If available, it tokenizes and sends to the backend payment endpoint.
+
+## Notes
+- Amounts are hard-coded (HKD 188.00, EUR 25.00) in minor units.
+- Backend uses the sandbox Payments API and your processing channel. No data is persisted.

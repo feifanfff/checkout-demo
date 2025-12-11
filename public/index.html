@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout Demo - iPhone Cases</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.checkout.com/js/framesv2.min.js"></script>
+  <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Mobile-first checkout</p>
+        <h1>iPhone cases for HK & NL</h1>
+        <p class="lede">Secure card capture, iDEAL for NL shoppers, and one-touch wallets where supported.</p>
+      </div>
+      <div class="badge">Palette: #323416 · #8C9E6E · #FFFFFD</div>
+    </header>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>Cart</h2>
+        <div class="product">
+          <div>
+            <div class="title">iPhone 15 Case</div>
+            <div class="note">Slim-fit, magsafe ready.</div>
+          </div>
+          <div id="price"></div>
+        </div>
+        <div class="selector">
+          <label for="country">Ship to</label>
+          <select id="country">
+            <option value="HK">Hong Kong (HKD)</option>
+            <option value="NL">Netherlands (EUR)</option>
+          </select>
+        </div>
+        <div class="totals">
+          <div class="row">
+            <span>Subtotal</span>
+            <span id="subtotal"></span>
+          </div>
+          <div class="row bold">
+            <span>Total</span>
+            <span id="total"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Payment</h2>
+        <div class="options" id="method-options">
+          <label><input type="radio" name="method" value="card" checked /> Card</label>
+          <label><input type="radio" name="method" value="ideal" /> iDEAL (EUR only)</label>
+          <label><input type="radio" name="method" value="wallet" /> Wallet (Apple/Google Pay)</label>
+        </div>
+
+        <div id="card-form" class="method">
+          <div class="frame-row">
+            <label>Card number</label>
+            <div id="card-number"></div>
+          </div>
+          <div class="frame-row">
+            <label>Expiry</label>
+            <div id="expiry-date"></div>
+          </div>
+          <div class="frame-row">
+            <label>CVC</label>
+            <div id="cvv"></div>
+          </div>
+          <div class="frame-row">
+            <label>Cardholder name</label>
+            <input type="text" id="cardholder-name" placeholder="Name on card" />
+          </div>
+          <button id="pay-card" class="primary">Pay with card</button>
+        </div>
+
+        <div id="ideal-form" class="method hidden">
+          <p>You'll be redirected to your bank. iDEAL is available for EUR orders.</p>
+          <button id="pay-ideal" class="primary">Pay with iDEAL</button>
+        </div>
+
+        <div id="wallet-form" class="method hidden">
+          <p>Use a one-touch wallet when your browser supports it.</p>
+          <div id="wallet-button"></div>
+          <button id="wallet-fallback" class="secondary">Check wallet availability</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

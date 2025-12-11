@@ -1,0 +1,13 @@
+{
+  "name": "checkcout-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Checkout.com Part 2 demo: card, iDEAL, and wallet payments.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -62,8 +62,13 @@ async function createCheckoutPayment(payload) {
   if (!res.ok) {
     const message = data && data.message ? data.message : 'Payment request failed';
     const details = data && data.error_codes ? data.error_codes : undefined;
+    const requestId = data && data.request_id ? data.request_id : undefined;
+    const errorType = data && data.error_type ? data.error_type : undefined;
     const err = new Error(message);
     err.details = details;
+    err.requestId = requestId;
+    err.errorType = errorType;
+    err.body = data;
     throw err;
   }
   return data;
@@ -80,7 +85,6 @@ async function handleCardPayment(body) {
     processing_channel_id: CHECKOUT_PROCESSING_CHANNEL,
     reference: body.reference || 'demo-order-card',
     capture: true,
-    '3ds': { enabled: true },
   };
   return createCheckoutPayment(payload);
 }

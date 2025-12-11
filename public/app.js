@@ -25,6 +25,7 @@ const walletFallback = document.getElementById('wallet-fallback');
 const payCardBtn = document.getElementById('pay-card');
 const payIdealBtn = document.getElementById('pay-ideal');
 const googlePayScriptId = 'google-pay-script';
+const framesScriptId = 'framesv2-script';
 
 function formatAmount(amount, currency) {
   try {
@@ -160,6 +161,26 @@ async function submitPayment(url, payload) {
   }
 
   setStatus(`Payment status: ${data.status || 'processed'}`);
+}
+
+function loadFramesScript() {
+  if (window.Frames) return Promise.resolve();
+  const existing = document.getElementById(framesScriptId);
+  if (existing) {
+    return new Promise((resolve, reject) => {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', () => reject(new Error('Failed to load Frames script')), { once: true });
+    });
+  }
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.id = framesScriptId;
+    script.src = 'https://cdn.checkout.com/js/framesv2.min.js';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Failed to load Frames script'));
+    document.head.appendChild(script);
+  });
 }
 
 function loadGooglePayScript() {
@@ -313,7 +334,13 @@ async function bootstrap() {
   initEventHandlers();
   const cfg = await fetchConfig();
   if (cfg.publicKey) {
-    initFrames(cfg.publicKey);
+    try {
+      await loadFramesScript();
+      initFrames(cfg.publicKey);
+    } catch (err) {
+      console.error(err);
+      setStatus(err.message || 'Failed to load payment fields.', true);
+    }
   }
   const urlParams = new URLSearchParams(window.location.search);
   const statusParam = urlParams.get('status');

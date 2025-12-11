@@ -10,11 +10,15 @@ Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherla
    - `CHECKOUT_PROCESSING_CHANNEL`
    - Optional: `SUCCESS_URL`, `FAILURE_URL`, `PORT`, `HOST`
 2. Install Node.js 18+.
-3. Run the server:
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Run the server:
    ```bash
    npm start
    ```
-4. Open `http://localhost:3000`.
+5. Open `http://localhost:3000`.
 
 ## Flows
 - Card: Frames tokenizes card data, backend creates payment via Checkout.com.

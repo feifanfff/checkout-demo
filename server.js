@@ -99,6 +99,7 @@ async function handleIdealPayment(body) {
     currency: body.currency,
     processing_channel_id: CHECKOUT_PROCESSING_CHANNEL,
     reference: body.reference || 'demo-order-ideal',
+    description: body.description || 'iDEAL payment for iPhone case',
     success_url: SUCCESS_URL,
     failure_url: FAILURE_URL,
   };

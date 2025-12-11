@@ -106,13 +106,14 @@ async function handleIdealPayment(body) {
   if (body.currency !== 'EUR') {
     throw new Error('iDEAL requires EUR currency');
   }
+  const idealDescription = body.description || 'iDEAL payment for iPhone case';
   const payload = {
-    source: { type: 'ideal' },
+    source: { type: 'ideal', description: idealDescription, language: 'nl' },
     amount: body.amount,
     currency: body.currency,
     processing_channel_id: CHECKOUT_PROCESSING_CHANNEL,
     reference: body.reference || 'demo-order-ideal',
-    description: body.description || 'iDEAL payment for iPhone case',
+    description: idealDescription,
     payment_type: 'Regular',
     success_url: SUCCESS_URL,
     failure_url: FAILURE_URL,

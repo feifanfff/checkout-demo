@@ -249,6 +249,7 @@ function initEventHandlers() {
       amount: state.amount,
       currency: state.currency,
       reference: `ideal-${Date.now()}`,
+      description: 'iDEAL payment for iPhone case',
     });
   });
 

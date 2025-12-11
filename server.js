@@ -81,8 +81,6 @@ async function handleCardPayment(body) {
     reference: body.reference || 'demo-order-card',
     capture: true,
     '3ds': { enabled: true },
-    success_url: SUCCESS_URL,
-    failure_url: FAILURE_URL,
   };
   return createCheckoutPayment(payload);
 }

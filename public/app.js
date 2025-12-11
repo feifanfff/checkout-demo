@@ -89,6 +89,15 @@ async function fetchConfig() {
 }
 
 function initFrames(publicKey) {
+  const cardNumber = document.getElementById('card-number');
+  const expiry = document.getElementById('expiry-date');
+  const cvv = document.getElementById('cvv');
+  if (!cardNumber || !expiry || !cvv) {
+    console.error('Card frame containers missing in DOM.');
+    setStatus('Card form failed to load. Refresh and try again.', true);
+    return;
+  }
+
   Frames.init({
     publicKey,
     schemeChoice: true,
@@ -285,7 +294,16 @@ async function bootstrap() {
   if (statusParam === 'failed') setStatus('Returned from redirect: failed', true);
 }
 
-bootstrap().catch((err) => {
-  console.error(err);
-  setStatus('Failed to load checkout. Check console.', true);
-});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    bootstrap().catch((err) => {
+      console.error(err);
+      setStatus('Failed to load checkout. Check console.', true);
+    });
+  });
+} else {
+  bootstrap().catch((err) => {
+    console.error(err);
+    setStatus('Failed to load checkout. Check console.', true);
+  });
+}

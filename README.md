@@ -28,3 +28,6 @@ Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherla
 ## Notes
 - Amounts are hard-coded (HKD 188.00, EUR 25.00) in minor units.
 - Backend uses the sandbox Payments API and your processing channel. No data is persisted.
+- Frames mounting notes:
+  - Card fields use Frames-required class names (`card-number-frame`, `expiry-date-frame`, `cvv-frame`) and fixed height; scripts are lazy-loaded to avoid blockers.
+  - If payment fields fail to render, check that `Frames` is defined, the containers exist, and no ad/privacy blocker is blocking `cdn.checkout.com`.

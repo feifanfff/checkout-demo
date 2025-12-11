@@ -146,10 +146,20 @@ select {
 .card-number-frame,
 .expiry-date-frame,
 .cvv-frame {
-  min-height: 40px;
+  height: 40px;
   border: 1px solid rgba(50, 52, 22, 0.2);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.card-number-frame iframe,
+.expiry-date-frame iframe,
+.cvv-frame iframe {
+  height: 100% !important;
+  width: 100% !important;
+  border: none;
 }
 
 .frame-row input {

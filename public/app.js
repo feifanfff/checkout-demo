@@ -205,6 +205,10 @@ function loadFramesScript() {
 }
 
 function loadGooglePayScript() {
+  if (!window.isSecureContext) {
+    setStatus('Wallet requires secure context (https or localhost). Use https:// or http://localhost.', true);
+    return Promise.reject(new Error('Insecure context'));
+  }
   if (document.getElementById(googlePayScriptId)) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');

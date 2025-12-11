@@ -33,3 +33,4 @@ Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherla
   - If payment fields fail to render, check that `Frames` is defined, the containers exist, and no ad/privacy blocker is blocking `cdn.checkout.com`.
 - Wallet test notes:
   - Google Pay runs in TEST mode. If availability check is blocked, allow `pay.google.com` and `play.google.com` in your ad/privacy blocker or try an incognito window.
+  - Google Pay requires a secure context. Use `http://localhost:3000` (localhost is treated as secure) or serve over HTTPS if accessing from another host.

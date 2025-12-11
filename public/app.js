@@ -24,6 +24,7 @@ const walletButtonContainer = document.getElementById('wallet-button');
 const walletFallback = document.getElementById('wallet-fallback');
 const payCardBtn = document.getElementById('pay-card');
 const payIdealBtn = document.getElementById('pay-ideal');
+const resetBtn = document.getElementById('reset-checkout');
 const googlePayScriptId = 'google-pay-script';
 const framesScriptId = 'framesv2-script';
 let framesInitialized = false;
@@ -36,9 +37,11 @@ function formatAmount(amount, currency) {
   }
 }
 
-function setStatus(message, isError = false) {
+function setStatus(message, isError = false, state = 'info') {
   statusEl.textContent = message;
   statusEl.classList.toggle('error', !!isError);
+  statusEl.classList.toggle('success', state === 'success');
+  statusEl.classList.toggle('pending', state === 'pending');
 }
 
 function updateTotals() {
@@ -150,25 +153,35 @@ function tryInitFrames(publicKey) {
 }
 
 async function submitPayment(url, payload) {
+  disableButtons(true);
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
+  disableButtons(false);
   if (!res.ok || data.error) {
     const detail = data.details ? ` (${data.details.join(', ')})` : '';
-    setStatus(`Payment failed: ${data.error || res.statusText}${detail}`, true);
+    const req = data.request_id ? ` [${data.request_id}]` : '';
+    setStatus(`Payment failed: ${data.error || res.statusText}${detail}${req}`, true);
     return;
   }
 
   if (data._links && data._links.redirect && data._links.redirect.href) {
-    setStatus('Redirecting to complete payment...');
+    setStatus('Redirecting to complete payment...', false, 'pending');
     window.location = data._links.redirect.href;
     return;
   }
 
-  setStatus(`Payment status: ${data.status || 'processed'}`);
+  const status = (data.status || 'processed').toLowerCase();
+  if (status === 'captured' || status === 'authorized' || status === 'approved') {
+    setStatus(`Payment status: ${data.status}`, false, 'success');
+    disableButtons(true);
+    showReset();
+  } else {
+    setStatus(`Payment status: ${data.status}`, false, 'pending');
+  }
 }
 
 function loadFramesScript() {
@@ -250,6 +263,10 @@ function initEventHandlers() {
         console.error(err);
         setStatus('Wallet script blocked or failed to load. Check network/ad blockers.', true);
       });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    resetCheckout();
   });
 }
 
@@ -393,4 +410,21 @@ if (document.readyState === 'loading') {
     console.error(err);
     setStatus('Failed to load checkout. Check console.', true);
   });
+}
+
+// Helpers for CTA state
+function disableButtons(disabled) {
+  payCardBtn.disabled = disabled;
+  payIdealBtn.disabled = disabled;
+  walletFallback.disabled = disabled;
+}
+
+function showReset() {
+  resetBtn.classList.remove('hidden');
+}
+
+function resetCheckout() {
+  resetBtn.classList.add('hidden');
+  disableButtons(false);
+  setStatus('');
 }

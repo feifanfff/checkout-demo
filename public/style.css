@@ -211,6 +211,16 @@ select {
   color: #8b1a1a;
 }
 
+.status.success {
+  background: rgba(140, 158, 110, 0.18);
+  color: #1f3b1f;
+}
+
+.status.pending {
+  background: rgba(255, 205, 80, 0.2);
+  color: #5a3b00;
+}
+
 @media (max-width: 640px) {
   .hero {
     flex-direction: column;

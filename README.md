@@ -31,3 +31,5 @@ Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherla
 - Frames mounting notes:
   - Card fields use Frames-required class names (`card-number-frame`, `expiry-date-frame`, `cvv-frame`) and fixed height; scripts are lazy-loaded to avoid blockers.
   - If payment fields fail to render, check that `Frames` is defined, the containers exist, and no ad/privacy blocker is blocking `cdn.checkout.com`.
+- Wallet test notes:
+  - Google Pay runs in TEST mode. If availability check is blocked, allow `pay.google.com` and `play.google.com` in your ad/privacy blocker or try an incognito window.

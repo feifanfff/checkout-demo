@@ -357,7 +357,7 @@ function initGooglePay() {
     }
   }).catch((err) => {
     console.error(err);
-    setStatus('Wallet availability check failed.', true);
+    setStatus('Wallet check blocked. Allow pay.google.com / play.google.com and retry.', true);
   });
 }
 

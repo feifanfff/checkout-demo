@@ -215,9 +215,15 @@ function initEventHandlers() {
     });
   });
 
-  payCardBtn.addEventListener('click', () => {
+  payCardBtn.addEventListener('click', async () => {
     setStatus('Tokenizing card...');
-    Frames.submitCard();
+    try {
+      await Frames.submitCard();
+    } catch (err) {
+      console.error(err);
+      const message = err?.message || 'Card form invalid';
+      setStatus(`Card validation failed: ${message}. Check number/expiry/CVC.`, true);
+    }
   });
 
   payIdealBtn.addEventListener('click', async () => {

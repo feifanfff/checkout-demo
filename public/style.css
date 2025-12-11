@@ -143,9 +143,9 @@ select {
   margin-bottom: 12px;
 }
 
-#card-number,
-#expiry-date,
-#cvv {
+.card-number-frame,
+.expiry-date-frame,
+.cvv-frame {
   min-height: 44px;
   border: 1px solid rgba(50, 52, 22, 0.2);
   border-radius: 10px;

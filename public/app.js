@@ -24,6 +24,7 @@ const walletButtonContainer = document.getElementById('wallet-button');
 const walletFallback = document.getElementById('wallet-fallback');
 const payCardBtn = document.getElementById('pay-card');
 const payIdealBtn = document.getElementById('pay-ideal');
+const googlePayScriptId = 'google-pay-script';
 
 function formatAmount(amount, currency) {
   try {
@@ -156,6 +157,19 @@ async function submitPayment(url, payload) {
   setStatus(`Payment status: ${data.status || 'processed'}`);
 }
 
+function loadGooglePayScript() {
+  if (document.getElementById(googlePayScriptId)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.id = googlePayScriptId;
+    script.src = 'https://pay.google.com/gp/p/js/pay.js';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Failed to load Google Pay script'));
+    document.head.appendChild(script);
+  });
+}
+
 function initEventHandlers() {
   countrySelect.addEventListener('change', (e) => {
     updateCountry(e.target.value);
@@ -186,8 +200,16 @@ function initEventHandlers() {
   });
 
   walletFallback.addEventListener('click', () => {
-    setStatus('Checking wallet availability...');
-    initGooglePay();
+    setStatus('Loading wallet support...');
+    loadGooglePayScript()
+      .then(() => {
+        setStatus('Checking wallet availability...');
+        initGooglePay();
+      })
+      .catch((err) => {
+        console.error(err);
+        setStatus('Wallet script blocked or failed to load. Check network/ad blockers.', true);
+      });
   });
 }
 

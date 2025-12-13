@@ -49,9 +49,20 @@
       <div class="panel">
         <h2>Payment</h2>
         <div class="options" id="method-options">
+          <label id="saved-method-label" class="hidden"><input type="radio" name="method" value="saved" /> Saved card</label>
           <label><input type="radio" name="method" value="card" checked /> Card</label>
           <label><input type="radio" name="method" value="ideal" /> iDEAL (EUR only)</label>
           <label><input type="radio" name="method" value="wallet" /> Wallet (Apple/Google Pay)</label>
+        </div>
+
+        <div id="saved-form" class="method hidden">
+          <p>Pay faster with a saved card on this device.</p>
+          <div id="saved-cards-list" class="saved-cards-list"></div>
+          <div class="saved-cards-actions">
+            <button id="remove-saved-card" class="secondary" type="button">Remove selected card</button>
+            <button id="clear-saved-cards" class="secondary" type="button">Clear all saved cards</button>
+          </div>
+          <button id="pay-saved-card" class="primary" type="button">Pay with saved card</button>
         </div>
 
         <div id="card-form" class="method">
@@ -71,6 +82,10 @@
             <label>Cardholder name</label>
             <input type="text" id="cardholder-name" placeholder="Name on card" />
           </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="save-card" />
+            Save card for next time (stores only last 4 digits + expiry on this device)
+          </label>
           <button id="pay-card" class="primary">Pay with card</button>
         </div>
 

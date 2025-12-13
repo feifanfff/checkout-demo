@@ -9,6 +9,7 @@ const state = {
   currency: 'HKD',
   amount: product.hkAmount,
   config: null,
+  savedCards: [],
 };
 
 const priceEl = document.getElementById('price');
@@ -17,17 +18,26 @@ const totalEl = document.getElementById('total');
 const countrySelect = document.getElementById('country');
 const statusEl = document.getElementById('status');
 const methodOptions = document.querySelectorAll('input[name="method"]');
+const savedMethodLabel = document.getElementById('saved-method-label');
+const savedForm = document.getElementById('saved-form');
+const savedCardsListEl = document.getElementById('saved-cards-list');
 const cardForm = document.getElementById('card-form');
 const idealForm = document.getElementById('ideal-form');
 const walletForm = document.getElementById('wallet-form');
 const walletButtonContainer = document.getElementById('wallet-button');
 const walletFallback = document.getElementById('wallet-fallback');
+const paySavedCardBtn = document.getElementById('pay-saved-card');
+const removeSavedCardBtn = document.getElementById('remove-saved-card');
+const clearSavedCardsBtn = document.getElementById('clear-saved-cards');
 const payCardBtn = document.getElementById('pay-card');
 const payIdealBtn = document.getElementById('pay-ideal');
 const resetBtn = document.getElementById('reset-checkout');
 const googlePayScriptId = 'google-pay-script';
 const framesScriptId = 'framesv2-script';
 let framesInitialized = false;
+
+const savedCardsStorageKey = 'savedCards';
+const lastPaymentStatusStorageKey = 'checkout:lastPaymentStatus';
 
 function formatAmount(amount, currency) {
   try {
@@ -79,9 +89,144 @@ function toggleIdealAvailability() {
 }
 
 function showMethod(value) {
+  savedForm.classList.toggle('hidden', value !== 'saved');
   cardForm.classList.toggle('hidden', value !== 'card');
   idealForm.classList.toggle('hidden', value !== 'ideal');
   walletForm.classList.toggle('hidden', value !== 'wallet');
+}
+
+function clearCardInputs() {
+  const cardholderNameEl = document.getElementById('cardholder-name');
+  if (cardholderNameEl) cardholderNameEl.value = '';
+  const saveCardEl = document.getElementById('save-card');
+  if (saveCardEl) {
+    saveCardEl.checked = false;
+    saveCardEl.defaultChecked = false;
+    saveCardEl.removeAttribute('checked');
+    saveCardEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  const frames = window.Frames;
+  if (!frames) return;
+
+  const clearFns = ['clearForm', 'reset', 'clear'];
+  const tryClear = () => {
+    for (const fnName of clearFns) {
+      if (typeof frames[fnName] !== 'function') continue;
+      try {
+        frames[fnName]();
+        return true;
+      } catch (err) {
+        console.warn(`Failed to clear Frames via ${fnName}`, err);
+      }
+    }
+    return false;
+  };
+
+  tryClear();
+  setTimeout(tryClear, 50);
+}
+
+function loadSavedCards() {
+  try {
+    const raw = localStorage.getItem(savedCardsStorageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((card) => card && typeof card === 'object' && typeof card.sourceId === 'string');
+  } catch (err) {
+    console.warn('Failed to load saved cards', err);
+    return [];
+  }
+}
+
+function persistSavedCards(cards) {
+  localStorage.setItem(savedCardsStorageKey, JSON.stringify(cards));
+}
+
+function formatSavedCardLabel(card) {
+  const scheme = (card.scheme || 'Card').toString().toUpperCase();
+  const last4 = (card.last4 || '••••').toString();
+  const expiryMonth = card.expiryMonth ? String(card.expiryMonth).padStart(2, '0') : null;
+  const expiryYear = card.expiryYear ? String(card.expiryYear) : null;
+  const expiry = expiryMonth && expiryYear ? `exp ${expiryMonth}/${expiryYear.slice(-2)}` : 'exp —';
+  return `${scheme} •••• ${last4}`;
+}
+
+function formatSavedCardNote(card) {
+  const expiryMonth = card.expiryMonth ? String(card.expiryMonth).padStart(2, '0') : null;
+  const expiryYear = card.expiryYear ? String(card.expiryYear) : null;
+  const expiry = expiryMonth && expiryYear ? `Expiry ${expiryMonth}/${expiryYear}` : 'Expiry unavailable';
+  return `${expiry} · Stored on this device`;
+}
+
+function getSelectedSavedCardId() {
+  const selected = document.querySelector('input[name="saved-card-choice"]:checked');
+  return selected ? selected.value : null;
+}
+
+function renderSavedCards() {
+  const hasSavedCards = state.savedCards.length > 0;
+  savedMethodLabel.classList.toggle('hidden', !hasSavedCards);
+  savedCardsListEl.innerHTML = '';
+
+  if (!hasSavedCards) {
+    if (document.querySelector('input[name="method"]:checked')?.value === 'saved') {
+      document.querySelector('input[value="card"]').checked = true;
+      showMethod('card');
+    }
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  state.savedCards.forEach((card, index) => {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'saved-card-item';
+
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'saved-card-choice';
+    radio.value = card.sourceId;
+    if (index === 0) radio.checked = true;
+
+    const meta = document.createElement('div');
+    meta.className = 'saved-card-meta';
+
+    const title = document.createElement('div');
+    title.textContent = formatSavedCardLabel(card);
+
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = formatSavedCardNote(card);
+
+    meta.appendChild(title);
+    meta.appendChild(note);
+
+    wrapper.appendChild(radio);
+    wrapper.appendChild(meta);
+    fragment.appendChild(wrapper);
+  });
+
+  savedCardsListEl.appendChild(fragment);
+}
+
+function extractSavedCardFromPayment(payment) {
+  const source = payment && payment.source ? payment.source : null;
+  const sourceId = source && typeof source.id === 'string' ? source.id : null;
+  if (!sourceId) return null;
+
+  const card = {
+    sourceId,
+    scheme: source.scheme || source.brand || source.type || 'card',
+    last4: source.last4 || source.last_4 || null,
+    expiryMonth: source.expiry_month || source.expiryMonth || null,
+    expiryYear: source.expiry_year || source.expiryYear || null,
+    addedAt: Date.now(),
+  };
+
+  if (card.last4) {
+    card.last4 = String(card.last4).slice(-4);
+  }
+  return card;
 }
 
 async function fetchConfig() {
@@ -141,13 +286,29 @@ function tryInitFrames(publicKey) {
   Frames.addEventHandler(Frames.Events.CARD_TOKENIZED, async (event) => {
     setStatus('Creating card payment...');
     const cardholderName = document.getElementById('cardholder-name').value || 'Checkout Demo';
-    await submitPayment('/api/payments/card', {
+    const wantsSave = !!document.getElementById('save-card')?.checked;
+    const result = await submitPayment('/api/payments/card', {
       token: event.token,
       amount: state.amount,
       currency: state.currency,
       reference: `card-${Date.now()}`,
       cardholder: cardholderName,
     });
+
+    if (wantsSave && result.ok && !result.redirected) {
+      const savedCard = extractSavedCardFromPayment(result.data);
+      if (savedCard && !state.savedCards.some((card) => card.sourceId === savedCard.sourceId)) {
+        state.savedCards.unshift(savedCard);
+        persistSavedCards(state.savedCards);
+        renderSavedCards();
+      }
+    }
+
+    if (result.shouldReload) {
+      setTimeout(() => {
+        window.location.assign(window.location.pathname);
+      }, 50);
+    }
   });
   return true;
 }
@@ -165,23 +326,32 @@ async function submitPayment(url, payload) {
     const detail = data.details ? ` (${data.details.join(', ')})` : '';
     const req = data.request_id ? ` [${data.request_id}]` : '';
     setStatus(`Payment failed: ${data.error || res.statusText}${detail}${req}`, true);
-    return;
+    return { ok: false, data, redirected: false, shouldReload: false };
   }
 
   if (data._links && data._links.redirect && data._links.redirect.href) {
     setStatus('Redirecting to complete payment...', false, 'pending');
     window.location = data._links.redirect.href;
-    return;
+    return { ok: true, data, redirected: true, shouldReload: false };
   }
 
   const status = (data.status || 'processed').toLowerCase();
   if (status === 'captured' || status === 'authorized' || status === 'approved') {
     setStatus(`Payment status: ${data.status}`, false, 'success');
+    clearCardInputs();
     disableButtons(true);
     showReset();
+    const shouldReload = url === '/api/payments/card';
+    if (shouldReload) {
+      try {
+        sessionStorage.setItem(lastPaymentStatusStorageKey, String(data.status || 'success'));
+      } catch (_) {}
+    }
+    return { ok: true, data, redirected: false, shouldReload };
   } else {
     setStatus(`Payment status: ${data.status}`, false, 'pending');
   }
+  return { ok: true, data, redirected: false, shouldReload: false };
 }
 
 function loadFramesScript() {
@@ -224,6 +394,40 @@ function loadGooglePayScript() {
 function initEventHandlers() {
   countrySelect.addEventListener('change', (e) => {
     updateCountry(e.target.value);
+  });
+
+  paySavedCardBtn.addEventListener('click', async () => {
+    const selectedId = getSelectedSavedCardId();
+    if (!selectedId) {
+      setStatus('Select a saved card first.', true);
+      return;
+    }
+    setStatus('Creating saved card payment...');
+    await submitPayment('/api/payments/saved-card', {
+      sourceId: selectedId,
+      amount: state.amount,
+      currency: state.currency,
+      reference: `saved-${Date.now()}`,
+    });
+  });
+
+  removeSavedCardBtn.addEventListener('click', () => {
+    const selectedId = getSelectedSavedCardId();
+    if (!selectedId) {
+      setStatus('Select a saved card to remove.', true);
+      return;
+    }
+    state.savedCards = state.savedCards.filter((card) => card.sourceId !== selectedId);
+    persistSavedCards(state.savedCards);
+    renderSavedCards();
+    setStatus('Saved card removed.');
+  });
+
+  clearSavedCardsBtn.addEventListener('click', () => {
+    state.savedCards = [];
+    persistSavedCards(state.savedCards);
+    renderSavedCards();
+    setStatus('Cleared saved cards.');
   });
 
   methodOptions.forEach((opt) => {
@@ -377,6 +581,16 @@ async function bootstrap() {
   showMethod('card');
   updateCountry(state.country);
   initEventHandlers();
+  state.savedCards = loadSavedCards();
+  renderSavedCards();
+  clearCardInputs();
+  try {
+    const last = sessionStorage.getItem(lastPaymentStatusStorageKey);
+    if (last) {
+      setStatus(`Payment status: ${last}`, false, 'success');
+      sessionStorage.removeItem(lastPaymentStatusStorageKey);
+    }
+  } catch (_) {}
   const cfg = await fetchConfig();
   if (cfg.publicKey) {
     try {
@@ -401,6 +615,7 @@ async function bootstrap() {
   const statusParam = urlParams.get('status');
   if (statusParam === 'success') setStatus('Returned from redirect: success');
   if (statusParam === 'failed') setStatus('Returned from redirect: failed', true);
+  if (statusParam) clearCardInputs();
 }
 
 if (document.readyState === 'loading') {
@@ -422,6 +637,7 @@ function disableButtons(disabled) {
   payCardBtn.disabled = disabled;
   payIdealBtn.disabled = disabled;
   walletFallback.disabled = disabled;
+  paySavedCardBtn.disabled = disabled;
 }
 
 function showReset() {
@@ -429,7 +645,5 @@ function showReset() {
 }
 
 function resetCheckout() {
-  resetBtn.classList.add('hidden');
-  disableButtons(false);
-  setStatus('');
+  window.location.assign(window.location.pathname);
 }

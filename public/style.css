@@ -132,6 +132,53 @@ select {
   margin-bottom: 12px;
 }
 
+.saved-cards-list {
+  border: 1px solid rgba(50, 52, 22, 0.14);
+  border-radius: 12px;
+  padding: 10px 10px 6px;
+  background: rgba(140, 158, 110, 0.06);
+  margin-bottom: 12px;
+}
+
+.saved-card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 10px;
+}
+
+.saved-card-item + .saved-card-item {
+  border-top: 1px dashed rgba(50, 52, 22, 0.14);
+}
+
+.saved-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.saved-card-meta .note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.saved-cards-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .method {
   margin-top: 6px;
 }

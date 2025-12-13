@@ -22,12 +22,16 @@ Checkout.com sandbox demo for selling iPhone cases in Hong Kong and the Netherla
 
 ## Flows
 - Card: Frames tokenizes card data, backend creates payment via Checkout.com.
+- Saved card: After a successful card payment, you can save the card (device-scoped) and pay again using the saved card option.
 - iDEAL: Enabled for EUR (Netherlands). Backend returns redirect; success/failure returns to the app.
 - Wallet: Google Pay test environment. If available, it tokenizes and sends to the backend payment endpoint.
 
 ## Notes
 - Amounts are hard-coded (HKD 188.00, EUR 25.00) in minor units.
-- Backend uses the sandbox Payments API and your processing channel. No data is persisted.
+- Backend uses the sandbox Payments API and your processing channel. No server-side data is persisted.
+- Saved card storage:
+  - Saved cards are stored in the browser only (`localStorage`) and can be removed/cleared in the UI.
+  - Only a reusable payment source reference plus non-sensitive display data (scheme/last4/expiry) is stored and shown; no PAN/CVV is stored or logged.
 - Frames mounting notes:
   - Card fields use Frames-required class names (`card-number-frame`, `expiry-date-frame`, `cvv-frame`) and fixed height; scripts are lazy-loaded to avoid blockers.
   - If payment fields fail to render, check that `Frames` is defined, the containers exist, and no ad/privacy blocker is blocking `cdn.checkout.com`.

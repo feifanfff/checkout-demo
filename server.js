@@ -138,6 +138,22 @@ async function handleWalletPayment(body) {
   return createCheckoutPayment(payload);
 }
 
+async function handleSavedCardPayment(body) {
+  if (!body.sourceId || !body.amount || !body.currency) {
+    throw new Error('sourceId, amount, and currency are required');
+  }
+  const payload = {
+    source: { type: 'id', id: body.sourceId },
+    amount: body.amount,
+    currency: body.currency,
+    processing_channel_id: CHECKOUT_PROCESSING_CHANNEL,
+    reference: body.reference || 'demo-order-saved-card',
+    capture: true,
+  };
+  logPayload('saved-card', payload);
+  return createCheckoutPayment(payload);
+}
+
 function serveStatic(req, res) {
   const parsed = new URL(req.url, `http://${req.headers.host}`);
   let pathname = parsed.pathname === '/' ? '/index.html' : parsed.pathname;
@@ -155,7 +171,11 @@ function serveStatic(req, res) {
     }
     const ext = path.extname(filePath);
     const mime = mimeTypes[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': mime });
+    res.writeHead(200, {
+      'Content-Type': mime,
+      'Cache-Control': 'no-store, max-age=0',
+      Pragma: 'no-cache',
+    });
     res.end(data);
   });
 }
@@ -202,6 +222,16 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await parseJSONBody(req);
       const result = await handleWalletPayment(body);
+      return sendJSON(res, 200, result);
+    } catch (err) {
+      return sendJSON(res, 400, { error: err.message, details: err.details });
+    }
+  }
+
+  if (req.method === 'POST' && pathname === '/api/payments/saved-card') {
+    try {
+      const body = await parseJSONBody(req);
+      const result = await handleSavedCardPayment(body);
       return sendJSON(res, 200, result);
     } catch (err) {
       return sendJSON(res, 400, { error: err.message, details: err.details });
